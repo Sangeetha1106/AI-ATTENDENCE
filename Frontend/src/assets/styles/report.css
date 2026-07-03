@@ -1,0 +1,22 @@
+.filter-card {
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.report-meta {
+  display: flex;
+  gap: 1.5rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.total-records {
+  color: var(--text-primary);
+  background: rgba(79, 70, 229, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+}

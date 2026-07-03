@@ -1,0 +1,67 @@
+.ai-result-panel {
+  padding: 2.5rem;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.markdown-content {
+  line-height: 1.8;
+  font-size: 1.05rem;
+  color: #E2E8F0;
+}
+
+.markdown-content strong {
+  color: #fff;
+  font-weight: 600;
+  display: inline-block;
+  margin-top: 1rem;
+}
+
+.markdown-content br {
+  margin-bottom: 0.5rem;
+  display: block;
+  content: "";
+}
+
+.ai-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: var(--radius-lg);
+  border: 1px dashed rgba(79, 70, 229, 0.5);
+}
+
+.ai-loading p {
+  margin-top: 1.5rem;
+  color: #A5B4FC;
+  font-weight: 500;
+  animation: pulse 2s infinite;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-state h3 {
+  margin: 1.5rem 0 0.5rem;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+}
+
+.text-muted {
+  color: rgba(255,255,255,0.2);
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
