@@ -11,9 +11,12 @@ const register = async (req, res, next) => {
 
 const login = async (req, res, next) => {
   try {
+    console.log(`[AUTH-CONTROLLER] Received login request for: ${req.body.email}`);
     const result = await authService.login(req.body);
+    console.log(`[AUTH-CONTROLLER] Login successful for: ${req.body.email}`);
     res.status(200).json({ success: true, message: 'Login successful', data: result });
   } catch (error) {
+    console.log(`[AUTH-CONTROLLER] Login error:`, error.message);
     next(error);
   }
 };
