@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const authRoutes = require('./modules/auth/auth.routes');
 const employeeRoutes = require('./modules/employee/employee.routes');
 const attendanceRoutes = require('./modules/attendance/attendance.routes');
@@ -13,6 +14,7 @@ const errorMiddleware = require('./middlewares/error.middleware');
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
