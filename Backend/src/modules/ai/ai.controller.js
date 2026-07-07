@@ -1,27 +1,38 @@
 const aiService = require('./ai.service');
 
-const generateSummary = async (req, res, next) => {
+const getOrganizationSummary = async (req, res, next) => {
   try {
-    const summary = await aiService.generateSummary(req.user);
-    res.status(200).json({ success: true, message: 'AI Summary generated successfully', data: { summary } });
+    const data = await aiService.getOrganizationSummary(req.user);
+    res.status(200).json({ success: true, message: 'Organization summary generated', data });
   } catch (error) {
     next(error);
   }
 };
 
-const generateEmployeeSummary = async (req, res, next) => {
+const searchEmployeeSummary = async (req, res, next) => {
   try {
-    const { name } = req.body;
+    const { name } = req.query;
     if (!name) return res.status(400).json({ success: false, message: 'Employee name is required' });
     
-    const summary = await aiService.generateEmployeeSummary(req.user, name);
-    res.status(200).json({ success: true, message: 'AI Employee Summary generated successfully', data: { summary } });
+    const data = await aiService.searchEmployeeSummary(req.user, name);
+    res.status(200).json({ success: true, message: 'Employee summary generated', data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getEmployeeSummaryById = async (req, res, next) => {
+  try {
+    const { employeeId } = req.params;
+    const data = await aiService.getEmployeeSummaryById(req.user, employeeId);
+    res.status(200).json({ success: true, message: 'Employee summary generated', data });
   } catch (error) {
     next(error);
   }
 };
 
 module.exports = {
-  generateSummary,
-  generateEmployeeSummary
+  getOrganizationSummary,
+  searchEmployeeSummary,
+  getEmployeeSummaryById
 };

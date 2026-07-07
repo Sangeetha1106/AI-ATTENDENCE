@@ -7,8 +7,9 @@ const router = express.Router();
 
 router.use(authenticate);
 
-// Only ADMIN, HR_MANAGER, DEPARTMENT_MANAGER can access AI Summary
-router.post('/generate-summary', authorize(['ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER']), aiController.generateSummary);
-router.post('/employee-summary', authorize(['ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER']), aiController.generateEmployeeSummary);
+// Only SUPER_ADMIN, ADMIN, HR_MANAGER, DEPARTMENT_MANAGER can access AI Summary
+router.get('/', authorize(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER']), aiController.getOrganizationSummary);
+router.get('/search', authorize(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER']), aiController.searchEmployeeSummary);
+router.get('/:employeeId', authorize(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER']), aiController.getEmployeeSummaryById);
 
 module.exports = router;

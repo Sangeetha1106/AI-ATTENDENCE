@@ -5,12 +5,10 @@ const Department = require('../department/department.model');
 const Attendance = require('../attendance/attendance.model');
 const { Op } = require('sequelize');
 
-const generateSummary = async (user) => {
+const getOrganizationSummary = async (user) => {
   try {
-    // 1. Get today's aggregates
     const todayStats = await dashboardService.getToday(user);
 
-    // 2. Fetch role-based scope
     let employeeWhere = { status: 'ACTIVE' };
     let attendanceWhere = {};
     if (user.role === 'DEPARTMENT_MANAGER') {
@@ -18,13 +16,15 @@ const generateSummary = async (user) => {
       if (managerDept) {
         employeeWhere.departmentId = managerDept.id;
         attendanceWhere.departmentId = managerDept.id;
+      } else {
+        employeeWhere.departmentId = -1;
+        attendanceWhere.departmentId = -1;
       }
     } else if (user.role === 'EMPLOYEE') {
       employeeWhere.id = user.id;
       attendanceWhere.employeeId = user.id;
     }
 
-    // 3. Fetch all employees and their attendances for context
     const employees = await Employee.findAll({
       where: employeeWhere,
       include: [{
@@ -38,7 +38,6 @@ const generateSummary = async (user) => {
       }]
     });
 
-    // 4. Compute statistics
     const deptStatsMap = {};
     const empStats = [];
 
@@ -75,13 +74,9 @@ const generateSummary = async (user) => {
     const longAbsentEmployees = [...empStats].sort((a,b) => b.a - a.a).slice(0, 5)
       .filter(e => e.a > 0).map(e => `${e.name} (Absent: ${e.a} days)`).join('\n');
 
-    const prompt = `[PROMPT SKIPPED FOR MOCK]`;
-
     let responseText = '';
     
-    // Check if the API key is valid (not the placeholder)
     if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_gemini_api_key' || process.env.GEMINI_API_KEY === '') {
-      // Fallback to generating the report locally to avoid 500 error
       const score = todayStats.attendancePercentage > 85 ? 95 : (todayStats.attendancePercentage > 60 ? 75 : 55);
       const status = todayStats.attendancePercentage > 85 ? 'Good' : (todayStats.attendancePercentage > 60 ? 'Average' : 'Poor');
       
@@ -156,31 +151,202 @@ ${longAbsentEmployees ? longAbsentEmployees.split('\n').map(d => '  - ' + d).joi
 The organization's attendance health is currently ${status.toLowerCase()}. Unplanned absences are the primary bottleneck affecting workforce predictability. Immediate HR interventions and targeted employee engagement strategies are recommended.
 `;
     } else {
+      const prompt = `[PROMPT SKIPPED FOR MOCK]`; // In production, add actual prompt
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
       const result = await model.generateContent(prompt);
       const response = await result.response;
       responseText = response.text();
     }
     
-    return responseText;
+    return { summary: responseText };
   } catch (error) {
     console.error('Error generating AI summary:', error);
     throw new Error('Failed to generate AI summary from Gemini');
   }
 };
 
-const generateEmployeeSummary = async (user, searchName) => {
+const _generateEmployeeStatsAndSummary = async (employee) => {
+  let p = 0, a = 0, l = 0, late = 0, o = 0, halfDays = 0;
+  let totalMinutes = 0, daysWithHours = 0;
+  
+  // For monthly analytics trends
+  let currentMonthPresent = 0;
+  let currentMonthAbsent = 0;
+  let currentMonthLate = 0;
+  let currentMonthLeave = 0;
+  let currentMonthOnDuty = 0;
+
+  let todayStatus = 'Absent';
+
+  const attendances = employee.attendances || [];
+  
+  const todayObj = new Date();
+  const todayDate = todayObj.toISOString().split('T')[0];
+  const currentMonthStr = todayDate.substring(0, 7); // YYYY-MM
+
+  attendances.forEach(att => {
+    let statusMark = 'Absent';
+    const isCurrentMonth = att.attendanceDate.startsWith(currentMonthStr);
+
+    if (att.status === 'PRESENT') {
+      p++;
+      if (isCurrentMonth) currentMonthPresent++;
+      statusMark = 'Present';
+      if (att.clockInTime && att.clockInTime > '09:15:00') {
+        late++;
+        if (isCurrentMonth) currentMonthLate++;
+      }
+    } else if (att.status === 'ON_DUTY') {
+      o++;
+      if (isCurrentMonth) currentMonthOnDuty++;
+      statusMark = 'On Duty';
+    } else if (att.status === 'LEAVE') {
+      l++;
+      if (isCurrentMonth) currentMonthLeave++;
+      statusMark = 'Leave';
+    } else {
+      a++;
+      if (isCurrentMonth) currentMonthAbsent++;
+    }
+    
+    if (att.attendanceDate === todayDate) {
+      todayStatus = statusMark;
+    }
+
+    // Process working hours
+    if (att.workingHours) {
+      const parts = att.workingHours.split(':');
+      if (parts.length >= 2) {
+        const hours = parseInt(parts[0], 10);
+        const mins = parseInt(parts[1], 10);
+        if (!isNaN(hours) && !isNaN(mins)) {
+          const totalMins = hours * 60 + mins;
+          totalMinutes += totalMins;
+          daysWithHours++;
+
+          if (totalMins > 0 && totalMins < 5 * 60) {
+            halfDays++;
+          }
+        }
+      }
+    }
+  });
+
+  const totalDays = p + a + l + o;
+  const attendancePercentage = totalDays > 0 ? Math.round(((p + o) / totalDays) * 100) : 0;
+
+  const avgMinutes = daysWithHours > 0 ? Math.round(totalMinutes / daysWithHours) : 0;
+
+  const formatTime = (totalMins) => {
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    return `${h}h ${m}m`;
+  };
+
+  const totalWorkingHoursStr = formatTime(totalMinutes);
+  const avgWorkingHoursStr = formatTime(avgMinutes);
+
+  const stats = {
+    present: p,
+    absent: a,
+    late: late,
+    leave: l,
+    onDuty: o,
+    halfDay: halfDays,
+    totalWorkingDays: totalDays,
+    attendancePercentage: attendancePercentage,
+    todayStatus: todayStatus,
+    totalWorkingHours: totalWorkingHoursStr,
+    avgWorkingHours: avgWorkingHoursStr,
+    // Monthly analytics
+    currentMonthPresent,
+    currentMonthAbsent,
+    currentMonthLate,
+    currentMonthLeave,
+    currentMonthOnDuty
+  };
+
+  let aiSummary = '';
+  
+  if (totalDays === 0) {
+    aiSummary = "No attendance records found.";
+  } else {
+    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_gemini_api_key' || process.env.GEMINI_API_KEY === '') {
+      if (attendancePercentage > 90) {
+        aiSummary = `**Performance:**\nAttendance is excellent.\nRarely absent.\nUsually arrives before office time.\nHighly punctual.\n\n**Recommendation:**\nKeep maintaining attendance.`;
+      } else if (attendancePercentage > 75) {
+        aiSummary = `**Performance:**\nGood attendance.\nOccasionally absent.\nGenerally reliable.\n\n**Recommendation:**\nContinue good work but minimize unplanned leaves.`;
+      } else {
+        aiSummary = `**Performance:**\nAttendance below company expectation.\nFrequent absences detected.\nMultiple late arrivals.\n\n**Recommendation:**\nManager should discuss attendance.`;
+      }
+    } else {
+      const prompt = `
+You are an AI Attendance Summary System.
+Evaluate this employee's attendance:
+Name: ${employee.fullName}
+Present: ${p} days
+Absent: ${a} days
+Late: ${late} days
+Leave: ${l} days
+Attendance: ${attendancePercentage}%
+Average Working Hours: ${avgWorkingHoursStr}
+
+Keep it professional. Output 3 bullet points for Performance and 1 direct Recommendation based on this data.
+`;
+      try {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        aiSummary = response.text();
+      } catch (err) {
+        aiSummary = `Failed to generate AI content.`;
+      }
+    }
+  }
+
+  // Determine Reporting Manager Placeholder if not explicitly available
+  const reportingManager = employee.department && employee.department.managerName 
+    ? employee.department.managerName 
+    : 'HR Dept / Direct';
+
+  const employeeData = {
+    id: employee.id,
+    fullName: employee.fullName,
+    employeeId: employee.employeeId,
+    email: employee.email,
+    departmentName: employee.department ? employee.department.departmentName : 'N/A',
+    designation: employee.designation || 'N/A',
+    reportingManager,
+    employmentStatus: employee.status || 'ACTIVE'
+  };
+
+  return {
+    employee: employeeData,
+    stats,
+    aiSummary
+  };
+};
+
+const searchEmployeeSummary = async (user, searchName) => {
   try {
-    if (!searchName || searchName.trim() === '') {
-      return "Employee not found";
+    const whereClause = {
+      fullName: {
+        [Op.iLike]: `%${searchName}%`
+      }
+    };
+
+    if (user.role === 'DEPARTMENT_MANAGER') {
+      const managerDept = await Department.findOne({ where: { departmentName: user.department || '' } });
+      if (managerDept) {
+        whereClause.departmentId = managerDept.id;
+      } else {
+        // Manager without a valid department shouldn't see anyone
+        whereClause.departmentId = -1;
+      }
     }
 
     const employee = await Employee.findOne({
-      where: {
-        fullName: {
-          [Op.iLike]: `%${searchName}%`
-        }
-      },
+      where: whereClause,
       include: [{
         model: Attendance,
         as: 'attendances',
@@ -192,83 +358,56 @@ const generateEmployeeSummary = async (user, searchName) => {
     });
 
     if (!employee) {
-      return "Employee not found";
+      const error = new Error('Employee not found or access denied.');
+      error.statusCode = 404;
+      throw error;
     }
 
-    let p = 0, a = 0, l = 0;
-    let dateSummary = [];
+    return await _generateEmployeeStatsAndSummary(employee);
+  } catch (error) {
+    throw error;
+  }
+};
 
-    employee.attendances.forEach(att => {
-      let statusMark = 'Absent';
-      if (att.status === 'PRESENT' || att.status === 'ON_DUTY') {
-        p++;
-        statusMark = 'Present';
-      } else if (att.status === 'LEAVE') {
-        l++;
-        statusMark = 'Leave';
+const getEmployeeSummaryById = async (user, employeeId) => {
+  try {
+    const whereClause = { id: employeeId };
+
+    if (user.role === 'DEPARTMENT_MANAGER') {
+      const managerDept = await Department.findOne({ where: { departmentName: user.department || '' } });
+      if (managerDept) {
+        whereClause.departmentId = managerDept.id;
       } else {
-        a++;
+        whereClause.departmentId = -1;
       }
-      dateSummary.push(`- ${att.attendanceDate}: ${statusMark}`);
+    }
+
+    const employee = await Employee.findOne({
+      where: whereClause,
+      include: [{
+        model: Attendance,
+        as: 'attendances',
+        required: false
+      }, {
+        model: Department,
+        as: 'department'
+      }]
     });
 
-    let responseText = '';
-    
-    // Check if the API key is valid (not the placeholder)
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_gemini_api_key' || process.env.GEMINI_API_KEY === '') {
-      responseText = `
-### 👨‍💼 Employee Attendance Details
-- **Employee Name:** ${employee.fullName}
-- **Employee ID:** ${employee.employeeId || 'N/A'}
-- **Department:** ${employee.department ? employee.department.departmentName : 'N/A'}
-
-#### 📅 Date-wise Attendance Summary
-${dateSummary.length > 0 ? dateSummary.join('\\n') : '- No attendance records found'}
-
-#### 📊 Totals
-- **Total Present Days:** ${p}
-- **Total Absent Days:** ${a}
-- **Total Leave Days:** ${l}
-`;
-    } else {
-      const prompt = `
-You are an AI Attendance Summary System.
-Your task is to return employee attendance details based ONLY on the name entered in the search box.
-
-RULES:
-1. The user entered the name: "${searchName}".
-2. You MUST NOT hardcode any name.
-3. If no match is found, return "Employee not found".
-
-We found the following data for this employee:
-Name: ${employee.fullName}
-ID: ${employee.employeeId}
-Department: ${employee.department ? employee.department.departmentName : 'N/A'}
-
-Attendances:
-${dateSummary.length > 0 ? dateSummary.join('\\n') : 'No attendance records'}
-
-Totals:
-Present: ${p}
-Absent: ${a}
-Leave: ${l}
-
-Return the output EXACTLY matching the requested OUTPUT FORMAT.
-`;
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      responseText = response.text();
+    if (!employee) {
+      const error = new Error('Employee not found or access denied.');
+      error.statusCode = 404;
+      throw error;
     }
-    
-    return responseText;
+
+    return await _generateEmployeeStatsAndSummary(employee);
   } catch (error) {
-    console.error('Error generating employee summary:', error);
-    throw new Error('Failed to generate employee summary');
+    throw error;
   }
 };
 
 module.exports = {
-  generateSummary,
-  generateEmployeeSummary
+  getOrganizationSummary,
+  searchEmployeeSummary,
+  getEmployeeSummaryById
 };
