@@ -45,6 +45,15 @@ const Employee = sequelize.define('Employee', {
       key: 'id'
     }
   },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  role: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'EMPLOYEE'
+  },
   joiningDate: {
     type: DataTypes.DATEONLY,
     allowNull: true

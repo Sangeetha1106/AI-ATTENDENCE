@@ -6,6 +6,9 @@ const departmentRoutes = require('./modules/department/department.routes');
 const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
 const reportRoutes = require('./modules/report/report.routes');
 const aiRoutes = require('./modules/ai/ai.routes');
+const leaveRoutes = require('./modules/leave/leave.routes');
+const onDutyRoutes = require('./modules/onduty/onduty.routes');
+const notificationRoutes = require('./modules/notification/notification.routes');
 const errorMiddleware = require('./middlewares/error.middleware');
 
 const app = express();
@@ -19,6 +22,9 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/leave', leaveRoutes);
+app.use('/api/onduty', onDutyRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use(errorMiddleware);
 

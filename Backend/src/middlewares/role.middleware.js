@@ -3,7 +3,7 @@ const authorize = (roles) => {
     if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({ 
         success: false, 
-        message: 'Forbidden. You do not have permission to perform this action.' 
+        message: 'You are not authorized to perform this action.' 
       });
     }
     next();

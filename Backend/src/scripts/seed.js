@@ -44,7 +44,7 @@ const seedUsers = async () => {
       },
       {
         fullName: 'Engineering Manager',
-        email: 'manager@test.com',
+        email: 'manger@gmail.com',
         password: hashedPassword,
         role: 'DEPARTMENT_MANAGER',
         department: 'Engineering' // Must match the departmentName

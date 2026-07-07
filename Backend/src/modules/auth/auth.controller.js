@@ -27,8 +27,19 @@ const getProfile = async (req, res, next) => {
   }
 };
 
+const changePassword = async (req, res, next) => {
+  try {
+    const { email, tempPassword, newPassword } = req.body;
+    const result = await authService.changePassword(email, tempPassword, newPassword);
+    res.status(200).json({ success: true, message: 'Password changed successfully', data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
-  getProfile
+  getProfile,
+  changePassword
 };

@@ -19,4 +19,8 @@ router.get('/:id', authorize(['ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER']), dep
 // Update Department (ADMIN only)
 router.put('/:id', authorize(['ADMIN']), departmentController.updateDepartment);
 
+// API Security Requirements (Return 403 for non-admins)
+router.delete('/', authorize(['ADMIN']), (req, res) => res.status(405).json({ message: 'Method Not Allowed' }));
+router.delete('/:id', authorize(['ADMIN']), (req, res) => res.status(405).json({ message: 'Method Not Allowed' }));
+
 module.exports = router;

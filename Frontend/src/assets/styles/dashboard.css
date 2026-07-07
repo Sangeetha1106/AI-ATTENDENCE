@@ -1,24 +1,38 @@
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+  padding-bottom: 2rem;
 }
 
 .dashboard-card {
-  background: var(--surface);
-  backdrop-filter: blur(12px);
+  background: #FFFFFF;
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  padding: 1.75rem;
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
 .dashboard-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top right, var(--card-color), transparent 70%);
+  opacity: 0.05;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.dashboard-card::after {
   content: '';
   position: absolute;
   top: 0;
@@ -30,38 +44,54 @@
 
 .dashboard-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-  background: rgba(30, 41, 59, 0.85);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-card:hover::before {
+  opacity: 0.1;
 }
 
 .card-icon {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,0.05);
+  background: rgba(var(--card-color-rgb), 0.1);
   color: var(--card-color, var(--primary));
+  font-size: 1.5rem;
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+.dashboard-card:hover .card-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.card-info {
+  z-index: 1;
 }
 
 .card-info h3 {
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 0.5rem;
+  letter-spacing: 0.02em;
 }
 
 .card-value {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 
-.card-blue { --card-color: #3B82F6; }
-.card-purple { --card-color: #8B5CF6; }
-.card-green { --card-color: #10B981; }
-.card-red { --card-color: #EF4444; }
-.card-orange { --card-color: #F59E0B; }
-.card-yellow { --card-color: #EAB308; }
-.card-teal { --card-color: #14B8A6; }
+.card-blue { --card-color: #3B82F6; --card-color-rgb: 59, 130, 246; }
+.card-purple { --card-color: #8B5CF6; --card-color-rgb: 139, 92, 246; }
+.card-green { --card-color: #10B981; --card-color-rgb: 16, 185, 129; }
+.card-red { --card-color: #EF4444; --card-color-rgb: 239, 68, 68; }
+.card-orange { --card-color: #F59E0B; --card-color-rgb: 245, 158, 11; }
+.card-yellow { --card-color: #EAB308; --card-color-rgb: 234, 179, 8; }
+.card-teal { --card-color: #14B8A6; --card-color-rgb: 20, 184, 166; }

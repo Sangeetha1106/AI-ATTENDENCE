@@ -7,8 +7,14 @@ const router = express.Router();
 
 router.use(authenticate);
 
-// Mark Attendance (ADMIN, HR_MANAGER, DEPARTMENT_MANAGER)
-router.post('/', authorize(['ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER']), attendanceController.markAttendance);
+// Check In (EMPLOYEE)
+router.post('/check-in', authorize(['EMPLOYEE']), attendanceController.checkIn);
+
+// Check Out (EMPLOYEE)
+router.post('/check-out', authorize(['EMPLOYEE']), attendanceController.checkOut);
+
+// Log Frontend Geolocation Errors (Any authenticated user)
+router.post('/log-error', attendanceController.logError);
 
 // Get All Attendance
 router.get('/', authorize(['ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER']), attendanceController.getAllAttendance);

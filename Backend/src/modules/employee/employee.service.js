@@ -1,21 +1,115 @@
 const Employee = require('./employee.model');
 const Department = require('../department/department.model');
+const User = require('../auth/user.model');
+const bcryptUtil = require('../../utils/bcrypt');
+const emailService = require('../../services/email.service');
+const { sequelize } = require('../../config/db');
+const crypto = require('crypto');
 
 const addEmployee = async (data) => {
-  const existingEmployee = await Employee.findOne({ where: { email: data.email } });
-  if (existingEmployee) {
-    const error = new Error('Email is already registered for another employee');
+  const email = data.email ? data.email.trim() : '';
+  console.log(`[EMPLOYEE] Attempting to create employee with email: "${email}"`);
+
+  // Check if email already exists in User or Employee tables
+  const existingEmployee = await Employee.findOne({ where: { email } });
+  const existingUser = await User.findOne({ where: { email } });
+  
+  if (existingEmployee || existingUser) {
+    const error = new Error('Email is already registered');
     error.statusCode = 400;
     throw error;
   }
   
-  return await Employee.create(data);
+  if (data.employeeId) {
+    const existingEmployeeId = await Employee.findOne({ where: { employeeId: data.employeeId } });
+    if (existingEmployeeId) {
+      const error = new Error('Employee ID is already taken');
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+  
+  const tempPassword = 'Password123';
+  const hashedPassword = await bcryptUtil.hashPassword(tempPassword);
+
+  const t = await sequelize.transaction();
+
+  try {
+    // 1. Create Employee
+    const employeeData = { 
+      ...data, 
+      email: email, 
+      password: hashedPassword,
+      role: 'EMPLOYEE'
+    };
+    
+    if (!employeeData.departmentId) employeeData.departmentId = null;
+    if (!employeeData.phone) employeeData.phone = null;
+    if (!employeeData.joiningDate) employeeData.joiningDate = null;
+    
+    const employee = await Employee.create(employeeData, { transaction: t });
+
+    await t.commit();
+
+    // 3. Send Email Notification
+    let emailSent = false;
+    try {
+      await emailService.sendWelcomeEmail(email, data.fullName, tempPassword);
+      emailSent = true;
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // We do not rollback transaction if email fails, we just notify
+    }
+
+    return { employee, emailSent };
+  } catch (error) {
+    await t.rollback();
+    throw error;
+  }
 };
 
-const getAllEmployees = async () => {
-  return await Employee.findAll({
-    include: [{ model: Department, as: 'department', attributes: ['id', 'departmentName'] }]
+const getAllEmployees = async (options = {}) => {
+  const { page = 1, limit = 10, search, departmentId, status, designation } = options;
+  const { Op } = require('sequelize');
+  
+  const where = {};
+  
+  if (search) {
+    where[Op.or] = [
+      { fullName: { [Op.iLike]: `%${search}%` } },
+      { email: { [Op.iLike]: `%${search}%` } },
+      { employeeId: { [Op.iLike]: `%${search}%` } }
+    ];
+  }
+  
+  if (departmentId) {
+    where.departmentId = departmentId;
+  }
+  
+  if (status) {
+    where.status = status;
+  }
+  
+  if (designation) {
+    where.designation = { [Op.iLike]: `%${designation}%` };
+  }
+  
+  const offset = (page - 1) * limit;
+  
+  const { rows, count } = await Employee.findAndCountAll({
+    where,
+    limit: parseInt(limit, 10),
+    offset: parseInt(offset, 10),
+    include: [{ model: Department, as: 'department', attributes: ['id', 'departmentName'] }],
+    order: [['createdAt', 'DESC']]
   });
+  
+  return {
+    employees: rows,
+    totalEmployees: count,
+    currentPage: parseInt(page, 10),
+    totalPages: Math.ceil(count / limit)
+  };
 };
 
 const getEmployeeById = async (id, user) => {
@@ -53,9 +147,50 @@ const updateEmployeeStatus = async (id, status) => {
   return employee;
 };
 
+const searchEmployeeByName = async (name) => {
+  if (!name) {
+    const error = new Error('Name parameter is required');
+    error.statusCode = 400;
+    throw error;
+  }
+  const { Op } = require('sequelize');
+  const employee = await Employee.findOne({
+    where: {
+      fullName: {
+        [Op.iLike]: `%${name}%`
+      }
+    },
+    include: [{ model: Department, as: 'department', attributes: ['id', 'departmentName'] }]
+  });
+  
+  if (!employee) {
+    const error = new Error('Employee not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  return employee;
+};
+
+const getEmployeeByEmail = async (email) => {
+  const employee = await Employee.findOne({
+    where: { email },
+    include: [{ model: Department, as: 'department', attributes: ['id', 'departmentName'] }]
+  });
+  
+  if (!employee) {
+    const error = new Error('Employee not found');
+    error.statusCode = 404;
+    throw error;
+  }
+  
+  return employee;
+};
+
 module.exports = {
   addEmployee,
   getAllEmployees,
   getEmployeeById,
-  updateEmployeeStatus
+  updateEmployeeStatus,
+  searchEmployeeByName,
+  getEmployeeByEmail
 };

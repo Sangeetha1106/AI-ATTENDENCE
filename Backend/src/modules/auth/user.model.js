@@ -24,12 +24,16 @@ const User = sequelize.define('User', {
     allowNull: false
   },
   role: {
-    type: DataTypes.ENUM('ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER', 'EMPLOYEE'),
+    type: DataTypes.ENUM('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'DEPARTMENT_MANAGER', 'EMPLOYEE'),
     allowNull: false
   },
   department: {
     type: DataTypes.STRING,
     allowNull: true
+  },
+  forcePasswordChange: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   }
 });
 

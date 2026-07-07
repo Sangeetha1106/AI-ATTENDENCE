@@ -8,6 +8,7 @@ const AddEmployee = () => {
   const [departments, setDepartments] = useState([]);
   const [formData, setFormData] = useState({
     fullName: '',
+    employeeId: '',
     email: '',
     phone: '',
     gender: 'MALE',
@@ -42,7 +43,12 @@ const AddEmployee = () => {
     setLoading(true);
     setError('');
     try {
-      await employeeService.add(formData);
+      const res = await employeeService.add(formData);
+      if (res.message) {
+        alert(res.message);
+      } else {
+        alert('Employee created successfully.');
+      }
       navigate('/employees');
     } catch (err) {
       setError(err.message || 'Failed to add employee');
@@ -64,6 +70,11 @@ const AddEmployee = () => {
           <div className="form-group">
             <label>Full Name</label>
             <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} required />
+          </div>
+          
+          <div className="form-group">
+            <label>Employee ID</label>
+            <input type="text" name="employeeId" value={formData.employeeId} onChange={handleChange} required placeholder="e.g., EMP001" />
           </div>
           
           <div className="form-group">

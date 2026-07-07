@@ -49,6 +49,7 @@ const calculateStats = async (user, dateWhereClause = {}) => {
   let totalAbsent = 0;
   let totalOnDuty = 0;
   let totalLeave = 0;
+  let totalLate = 0;
 
   attendanceCounts.forEach(record => {
     const status = record.status;
@@ -57,17 +58,20 @@ const calculateStats = async (user, dateWhereClause = {}) => {
     if (status === 'ABSENT') totalAbsent = count;
     if (status === 'ON_DUTY') totalOnDuty = count;
     if (status === 'LEAVE') totalLeave = count;
+    if (status === 'LATE') totalLate = count;
   });
   
+  const totalWorkingDays = totalPresent + totalLate + totalAbsent + totalLeave + totalOnDuty;
   let attendancePercentage = 0;
-  if (totalEmployees > 0) {
-    attendancePercentage = ((totalPresent / totalEmployees) * 100).toFixed(2);
+  if (totalWorkingDays > 0) {
+    attendancePercentage = (((totalPresent + totalLate) / totalWorkingDays) * 100).toFixed(2);
   }
 
   return {
     totalEmployees,
     totalDepartments,
     totalPresent,
+    totalLate,
     totalAbsent,
     totalOnDuty,
     totalLeave,

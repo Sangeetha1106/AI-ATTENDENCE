@@ -1,36 +1,104 @@
 .profile-card {
-  max-width: 800px;
+  max-width: 850px;
   margin: 0 auto;
-  padding: 2.5rem;
+  padding: 3rem;
+  background: #FFFFFF;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
 }
 
 .grid-2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2.5rem;
 }
 
 .info-group label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  font-weight: 700;
 }
 
 .info-group p {
-  font-size: 1.125rem;
-  font-weight: 500;
-  padding: 0.75rem;
-  background: rgba(15, 23, 42, 0.4);
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(255,255,255,0.05);
+  font-size: 1.15rem;
+  font-weight: 600;
+  padding: 1rem 1.25rem;
+  background: #F8FAFC;
+  border-radius: var(--radius-md);
+  border: 1px solid #E2E8F0;
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
 
 .role-badge {
   display: inline-block;
-  background: rgba(79, 70, 229, 0.2) !important;
-  color: #A5B4FC;
-  border: 1px solid rgba(79, 70, 229, 0.3) !important;
+  background: #EEF2FF !important;
+  color: var(--primary);
+  border: 1px solid #C7D2FE !important;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Pagination Styles */
+.pagination-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.pagination-btn:hover:not(.active) {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+  transform: translateY(-1px);
+}
+
+.pagination-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
+}
+
+.pagination-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.filter-input {
+  background: rgba(15, 23, 42, 0.8) !important;
+  color: white !important;
+}
+
+.filter-input::placeholder {
+  color: rgba(255, 255, 255, 0.8) !important;
+  opacity: 1; /* Override Firefox's default opacity */
+}
+
+.filter-input option {
+  background-color: #0f172a;
+  color: white;
 }

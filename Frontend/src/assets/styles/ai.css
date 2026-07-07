@@ -1,23 +1,40 @@
 .ai-result-panel {
-  padding: 2.5rem;
-  animation: fadeIn 0.8s ease-out;
+  padding: 3rem;
+  background: #FFFFFF;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-result-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), #0EA5E9, #10B981);
 }
 
 .markdown-content {
   line-height: 1.8;
   font-size: 1.05rem;
-  color: #E2E8F0;
+  color: #334155;
 }
 
 .markdown-content strong {
-  color: #fff;
-  font-weight: 600;
+  color: #0F172A;
+  font-weight: 700;
   display: inline-block;
-  margin-top: 1rem;
+  margin-top: 1.25rem;
+  letter-spacing: 0.01em;
 }
 
 .markdown-content br {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   display: block;
   content: "";
 }
@@ -27,17 +44,32 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
-  background: rgba(15, 23, 42, 0.5);
+  min-height: 350px;
+  background: #F8FAFC;
   border-radius: var(--radius-lg);
-  border: 1px dashed rgba(79, 70, 229, 0.5);
+  border: 2px dashed #CBD5E1;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(79, 70, 229, 0.05), transparent);
+  animation: scan 2s linear infinite;
 }
 
 .ai-loading p {
-  margin-top: 1.5rem;
-  color: #A5B4FC;
-  font-weight: 500;
+  margin-top: 1.75rem;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 1.1rem;
   animation: pulse 2s infinite;
+  letter-spacing: 0.05em;
 }
 
 .empty-state {
@@ -45,19 +77,30 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 5rem 2rem;
+  padding: 6rem 2rem;
   text-align: center;
   color: var(--text-secondary);
+  background: #F8FAFC;
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--surface-border);
 }
 
 .empty-state h3 {
   margin: 1.5rem 0 0.5rem;
   color: var(--text-primary);
-  font-size: 1.25rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .text-muted {
-  color: rgba(255,255,255,0.2);
+  color: #94A3B8;
+  font-size: 0.95rem;
+}
+
+@keyframes scan {
+  0% { left: -100%; }
+  100% { left: 200%; }
 }
 
 @keyframes pulse {

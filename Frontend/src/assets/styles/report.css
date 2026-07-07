@@ -1,22 +1,34 @@
 .filter-card {
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+  background: #FFFFFF;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
 }
+
 .report-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
+
 .report-meta {
   display: flex;
-  gap: 1.5rem;
-  font-weight: 500;
+  gap: 2rem;
+  font-weight: 600;
   color: var(--text-secondary);
+  align-items: center;
 }
+
 .total-records {
-  color: var(--text-primary);
-  background: rgba(79, 70, 229, 0.2);
-  padding: 0.25rem 0.75rem;
-  border-radius: var(--radius-sm);
+  color: var(--primary);
+  background: #EEF2FF;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid #C7D2FE;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.05);
+  letter-spacing: 0.05em;
+  font-weight: 700;
 }
