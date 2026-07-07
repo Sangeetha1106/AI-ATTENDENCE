@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 const startServer = async () => {
   try {
     await sequelize.authenticate();
-    console.log('Database connected successfully.');
+    console.log('Database Connected Successfully');
     
     // Initialize associations and sync database
     await initModels();
@@ -18,7 +18,8 @@ const startServer = async () => {
       console.log(`Server is running on port ${PORT}`);
     });
   } catch (error) {
-    console.error('Unable to start the server:', error);
+    console.error('Database connection failed:', error);
+    process.exit(1);
   }
 };
 
